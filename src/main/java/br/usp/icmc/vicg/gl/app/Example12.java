@@ -170,11 +170,18 @@ public class Example12 extends KeyAdapter implements GLEventListener {
 
         model.draw();
         viewMatrix.loadIdentity();
-        viewMatrix.lookAt((float) (beta*2 + Math.cos(epslon)), (float) (alpha*2 + Math.sin(epslon)), 1,
+        float viewUpy = (float) (Math.cos(epslon*Math.PI/180.0f));
+        if ( Math.abs(viewUpy) < 0.01){
+            viewUpy = -0.01f;
+        }
+        float x = (float) (beta*2);
+        float y = (float) (alpha*2 + Math.sin(epslon*Math.PI/180.0f));
+        float z = (float) (Math.cos(epslon*Math.PI/180.0f));
+        viewMatrix.lookAt(x, y, z ,
                 beta, alpha, 0,
-                0, 1, 0);
+                0, viewUpy, 0);
         viewMatrix.bind();
-
+        System.out.println("x: " + x + " y: " + y + " z: " + z);
         light.bind();
 
 
