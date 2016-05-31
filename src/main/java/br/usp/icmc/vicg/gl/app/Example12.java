@@ -25,6 +25,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +36,8 @@ public class Example12 extends KeyAdapter implements GLEventListener {
     private final Matrix4 modelMatrix;
     private final Matrix4 projectionMatrix;
     private final Matrix4 viewMatrix;
-    private final JWavefrontObject model;
+    //private final JWavefrontObject model;
+    private final Vector<JWavefrontObject> objVector = new Vector<JWavefrontObject>(50);
     private final Light light;
     private float alpha;
     private float beta;
@@ -56,7 +59,10 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         projectionMatrix = new Matrix4();
         viewMatrix = new Matrix4();
         
-        model = new JWavefrontObject(new File("./data/al.obj"));
+        //model = new JWavefrontObject(new File("./data/planet/AlienPlanet/p1/AlienPlanet.obj"));
+        objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p1/AlienPlanet.obj")));
+        objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p2/AlienPlanet.obj")));
+        objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p3/AlienPlanet.obj")));
         light = new Light();
         
         alpha = 0;
@@ -92,18 +98,25 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         projectionMatrix.init(gl, shader.getUniformLocation("u_projectionMatrix"));
         viewMatrix.init(gl, shader.getUniformLocation("u_viewMatrix"));
         
+        Iterator it = objVector.iterator();
         try {
             //init the model
-            model.init(gl, shader);
+            while (it.hasNext()) {
+                JWavefrontObject atual = (JWavefrontObject) it.next();
+                atual.init(gl, shader);
+                atual.unitize();
+                atual.dump();
+            }
+            /*model.init(gl, shader);
             model.unitize();
-            model.dump();
+            model.dump();*/
         } catch (IOException ex) {
             Logger.getLogger(Example12.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         // init the light
-        light.setPosition(new float[]{10, 10, 50, 1.0f});
-        light.setAmbientColor(new float[]{0.1f, 0.1f, 0.1f, 1.0f});
+        light.setPosition(new float[]{10, 10, 10, 1.0f});
+        light.setAmbientColor(new float[]{0.5f, 0.5f, 0.5f, 1.0f});
         light.setDiffuseColor(new float[]{0.75f, 0.75f, 0.75f, 1.0f});
         light.setSpecularColor(new float[]{0.7f, 0.7f, 0.7f, 1.0f});
         light.init(gl, shader);
@@ -131,8 +144,10 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.scale(0.03f, 0.03f, 0.03f);
         modelMatrix.bind();
         i+=0.1f;
-
-        model.draw();
+        Iterator it = objVector.iterator();
+        JWavefrontObject atual = (JWavefrontObject) it.next();
+        //model.draw();
+        atual.draw();
 
         x = ((float) Math.cos(j*Math.PI/40)) * 0.5f;
         y = ((float) Math.sin(j*Math.PI/40)) * 0.5f;
@@ -143,7 +158,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.rotate(30*j, 1, 1, 0);
         modelMatrix.scale(0.02f, 0.02f, 0.02f);
         modelMatrix.bind();
-        model.draw();
+        atual.draw();
         j+=0.1f;
 
         xlua = ((float) Math.cos(j*Math.PI/15)) * 0.1f;
@@ -156,7 +171,10 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.scale(0.025f, 0.025f, 0.025f);
         modelMatrix.bind();
 
-        model.draw();
+        atual = (JWavefrontObject) it.next();
+        //model.draw();
+        atual.draw();
+        //model.draw();
 
         x = ((float) Math.cos(j*Math.PI/80)) * 0.7f;
         y = ((float) Math.sin(j*Math.PI/80)) * 0.7f;
@@ -168,17 +186,19 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.scale(0.07f, 0.07f, 0.07f);
         modelMatrix.bind();
 
-        model.draw();
+        atual = (JWavefrontObject) it.next();
+        //model.draw();
+        atual.draw();
         viewMatrix.loadIdentity();
         float viewUpy = (float) (Math.cos(epslon*Math.PI/180.0f));
         if ( Math.abs(viewUpy) < 0.01){
             viewUpy = -0.01f;
         }
         float x = (float) (beta*2);
-        float y = (float) (alpha*2 + Math.sin(epslon*Math.PI/180.0f));
-        float z = (float) (Math.cos(epslon*Math.PI/180.0f));
+        float y = (float) (alpha*2);
+        float z = 1;
         viewMatrix.lookAt(x, y, z ,
-                beta, alpha, 0,
+                beta, alpha, 0, 
                 0, viewUpy, 0);
         viewMatrix.bind();
         System.out.println("x: " + x + " y: " + y + " z: " + z);
@@ -195,7 +215,11 @@ public class Example12 extends KeyAdapter implements GLEventListener {
     
     @Override
     public void dispose(GLAutoDrawable drawable) {
-        model.dispose();
+        Iterator it = objVector.iterator();
+        while (it.hasNext()) {
+            JWavefrontObject atual = (JWavefrontObject) it.next();
+            atual.dispose();
+        }
     }
     
     @Override
