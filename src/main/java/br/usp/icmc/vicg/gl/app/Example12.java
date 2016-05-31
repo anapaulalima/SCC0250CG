@@ -63,6 +63,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p1/AlienPlanet.obj")));
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p2/AlienPlanet.obj")));
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p3/AlienPlanet.obj")));
+        objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p4/AlienPlanet.obj")));
         light = new Light();
         
         alpha = 0;
@@ -116,7 +117,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         
         // init the light
         light.setPosition(new float[]{10, 10, 10, 1.0f});
-        light.setAmbientColor(new float[]{0.5f, 0.5f, 0.5f, 1.0f});
+        light.setAmbientColor(new float[]{0.8f, 0.8f, 0.8f, 1.0f});
         light.setDiffuseColor(new float[]{0.75f, 0.75f, 0.75f, 1.0f});
         light.setSpecularColor(new float[]{0.7f, 0.7f, 0.7f, 1.0f});
         light.init(gl, shader);
@@ -158,6 +159,8 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.rotate(30*j, 1, 1, 0);
         modelMatrix.scale(0.02f, 0.02f, 0.02f);
         modelMatrix.bind();
+        
+        atual = (JWavefrontObject) it.next();
         atual.draw();
         j+=0.1f;
 
