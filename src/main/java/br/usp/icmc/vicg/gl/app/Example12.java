@@ -3,6 +3,7 @@ package br.usp.icmc.vicg.gl.app;
 import br.usp.icmc.vicg.gl.core.Light;
 import br.usp.icmc.vicg.gl.jwavefront.JWavefrontObject;
 import br.usp.icmc.vicg.gl.matrix.Matrix4;
+import br.usp.icmc.vicg.gl.model.Ellipse;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -29,6 +30,8 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.geometry.Point3D;
+import static javax.media.opengl.GL.GL_LINES;
 
 public class Example12 extends KeyAdapter implements GLEventListener {
     
@@ -47,6 +50,8 @@ public class Example12 extends KeyAdapter implements GLEventListener {
     private float x;
     private float y;
     private float z;
+    private final Vector<Point3D> lastPoints = new Vector<Point3D>(50);
+    private final Vector<Ellipse> ellipses = new Vector<Ellipse>(50);
     private float xlua;
     private float ylua;
     private float epslon;
@@ -64,6 +69,8 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p2/AlienPlanet.obj")));
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p3/AlienPlanet.obj")));
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p4/AlienPlanet.obj")));
+        
+        ellipses.add(new Ellipse(0.5f, 0.5f));
         light = new Light();
         
         alpha = 0;
@@ -116,11 +123,20 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         }
         
         // init the light
-        light.setPosition(new float[]{10, 10, 10, 1.0f});
-        light.setAmbientColor(new float[]{0.8f, 0.8f, 0.8f, 1.0f});
-        light.setDiffuseColor(new float[]{0.75f, 0.75f, 0.75f, 1.0f});
-        light.setSpecularColor(new float[]{0.7f, 0.7f, 0.7f, 1.0f});
+        light.setPosition(new float[]{-10, -10, -10, 1.0f});
+        light.setAmbientColor(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light.setDiffuseColor(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
+        light.setSpecularColor(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
         light.init(gl, shader);
+        
+        
+        for (Ellipse atual : ellipses) {
+            atual.init(gl, shader);
+        }
+    }
+    
+    public void drawLine(GLAutoDrawable drawable, Point3D i, Point3D f){
+        
     }
     
     @Override
@@ -148,11 +164,15 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         Iterator it = objVector.iterator();
         JWavefrontObject atual = (JWavefrontObject) it.next();
         //model.draw();
-        atual.draw();
-
+        atual.draw();//sol
+        
+        Iterator itEllipse = ellipses.iterator();
+        Ellipse atualEllipse = (Ellipse) itEllipse.next();
+        lastPoints.add(0, new Point3D(x, y, 0));
         x = ((float) Math.cos(j*Math.PI/40)) * 0.5f;
         y = ((float) Math.sin(j*Math.PI/40)) * 0.5f;
         x *= 0.7f;
+        
         modelMatrix.loadIdentity();
         modelMatrix.rotate(30, 1, 0, 0);
         modelMatrix.translate(x, y, 0);
@@ -161,7 +181,9 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.bind();
         
         atual = (JWavefrontObject) it.next();
-        atual.draw();
+        atualEllipse.bind();
+        atualEllipse.draw(GL3.GL_LINE_LOOP);
+        atual.draw();//mercurio
         j+=0.1f;
 
         xlua = ((float) Math.cos(j*Math.PI/15)) * 0.1f;
