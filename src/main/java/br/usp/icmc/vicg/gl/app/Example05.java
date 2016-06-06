@@ -1,6 +1,8 @@
 package br.usp.icmc.vicg.gl.app;
 
 import br.usp.icmc.vicg.gl.matrix.Matrix4;
+import br.usp.icmc.vicg.gl.model.Circle;
+import br.usp.icmc.vicg.gl.model.Ellipse;
 import br.usp.icmc.vicg.gl.model.SimpleModel;
 import br.usp.icmc.vicg.gl.model.Triangle;
 import java.awt.Frame;
@@ -34,7 +36,7 @@ public class Example05 implements GLEventListener {
     shader = ShaderFactory.getInstance(ShaderType.MODEL_PROJECTION_MATRIX_SHADER);
     modelMatrix = new Matrix4();
     projectionMatrix = new Matrix4();
-    triangle = new Triangle();
+    triangle = new Ellipse(0.5f, 0.5f);
   }
 
   @Override

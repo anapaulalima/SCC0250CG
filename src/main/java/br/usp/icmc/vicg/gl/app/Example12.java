@@ -1,9 +1,12 @@
 package br.usp.icmc.vicg.gl.app;
 
 import br.usp.icmc.vicg.gl.core.Light;
+import br.usp.icmc.vicg.gl.core.Material;
 import br.usp.icmc.vicg.gl.jwavefront.JWavefrontObject;
 import br.usp.icmc.vicg.gl.matrix.Matrix4;
 import br.usp.icmc.vicg.gl.model.Ellipse;
+import br.usp.icmc.vicg.gl.model.Square;
+import br.usp.icmc.vicg.gl.model.WiredCube;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -22,11 +25,13 @@ import br.usp.icmc.vicg.gl.util.ShaderFactory.ShaderType;
 
 import com.jogamp.opengl.util.AnimatorBase;
 import com.jogamp.opengl.util.FPSAnimator;
+import java.awt.Point;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,12 +55,17 @@ public class Example12 extends KeyAdapter implements GLEventListener {
     private float x;
     private float y;
     private float z;
+    private final float [] starPoints;
     private final Vector<Point3D> lastPoints = new Vector<Point3D>(50);
     private final Vector<Ellipse> ellipses = new Vector<Ellipse>(50);
     private float xlua;
     private float ylua;
     private float epslon;
     private float gama;
+    private final Material material;
+    private float mult;
+    private int nstar;
+    private final WiredCube star;
     
     public Example12() {
         // Carrega os shaders
@@ -69,8 +79,14 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p2/AlienPlanet.obj")));
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p3/AlienPlanet.obj")));
         objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p4/AlienPlanet.obj")));
+        objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p5/AlienPlanet.obj")));
+        objVector.add(new JWavefrontObject(new File("./data/planet/AlienPlanet/p6/AlienPlanet.obj")));
         
-        ellipses.add(new Ellipse(0.5f, 0.5f));
+        ellipses.add(new Ellipse(0.35f, 0.5f));
+        ellipses.add(new Ellipse(0.7f, 0.7f));
+        ellipses.add(new Ellipse(0.2f, 0.3f));
+        ellipses.add(new Ellipse(0.7f, 0.9f));
+        
         light = new Light();
         
         alpha = 0;
@@ -79,6 +95,11 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         i = 0.1f;
         j = 0.1f;
         x = y = z = xlua = ylua = 0.0f;
+        mult = 1.0f;
+        material = new Material();
+        nstar = 400;
+        starPoints = new float[nstar];
+        star = new WiredCube();
     }
     
     @Override
@@ -89,7 +110,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         // Print OpenGL version
         System.out.println("OpenGL Version: " + gl.glGetString(GL.GL_VERSION) + "\n");
         
-        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         gl.glClearDepth(1.0f);
         
         gl.glEnable(GL.GL_DEPTH_TEST);
@@ -123,15 +144,27 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         }
         
         // init the light
-        light.setPosition(new float[]{-10, -10, -10, 1.0f});
-        light.setAmbientColor(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
-        light.setDiffuseColor(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
-        light.setSpecularColor(new float[]{1.0f, 1.0f, 1.0f, 1.0f});
         light.init(gl, shader);
+        light.setPosition(new float[]{0.0f, 1.0f, 2.0f, 0.0f});
+        light.setAmbientColor(new float[]{0.9f, 0.9f, 0.9f, 0.0f});
+        light.setDiffuseColor(new float[]{1.0f, 1.0f, 1.0f, 0.0f});
+        light.setSpecularColor(new float[]{0.9f, 0.9f, 0.9f, 0.0f});
+        light.bind();
+        
+        material.init(gl, shader);
+        material.setAmbientColor(new float[]{0.5f, 0.5f, 0.5f, 0.0f});
+        material.setDiffuseColor(new float[]{1.0f, 0.0f, 0.0f, 0.0f});
+        material.setSpecularColor(new float[]{0.9f, 0.9f, 0.9f, 0.0f});
+        material.setSpecularExponent(32);
         
         
+        star.init(gl, shader);
         for (Ellipse atual : ellipses) {
             atual.init(gl, shader);
+        }
+        for (int i=0; i<(nstar/2); i++){
+            starPoints[i*2]=((new Random().nextFloat())*800.0f-400.0f);
+            starPoints[i*2+1]=((new Random().nextFloat())*800.0f-400.0f);
         }
     }
     
@@ -148,16 +181,21 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         gl.glClear(GL3.GL_COLOR_BUFFER_BIT | GL3.GL_DEPTH_BUFFER_BIT);
         
         projectionMatrix.loadIdentity();
-        //    projectionMatrix.ortho(
-        //            -delta, delta,
-        //            -delta, delta,
-        //            -2*delta, 2*delta);
         projectionMatrix.perspective(45.0f+delta, 1.0f, 0.1f, 10.0f);
         projectionMatrix.bind();
 
+        for (int l = 0; l<(nstar/2); l++){
+            modelMatrix.loadIdentity();
+            modelMatrix.scale(0.008f, 0.008f, 0.008f);
+            modelMatrix.translate(starPoints[l*2],starPoints[l*2+1],0);
+            modelMatrix.rotate(30*j, 0, 0, 1);
+            modelMatrix.bind();
+            material.bind();
+            star.bind();
+            star.draw(GL3.GL_LINE_LOOP);
+        }
+        
         modelMatrix.loadIdentity();
-        //modelMatrix.rotate(30, 1, 0, 0);
-        //modelMatrix.rotate(10*i, 1, 1, 0);
         modelMatrix.scale(0.03f, 0.03f, 0.03f);
         modelMatrix.bind();
         i+=0.1f;
@@ -166,8 +204,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         //model.draw();
         atual.draw();//sol
         
-        Iterator itEllipse = ellipses.iterator();
-        Ellipse atualEllipse = (Ellipse) itEllipse.next();
+        
         lastPoints.add(0, new Point3D(x, y, 0));
         x = ((float) Math.cos(j*Math.PI/40)) * 0.5f;
         y = ((float) Math.sin(j*Math.PI/40)) * 0.5f;
@@ -177,14 +214,23 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.rotate(30, 1, 0, 0);
         modelMatrix.translate(x, y, 0);
         modelMatrix.rotate(30*j, 1, 1, 0);
-        modelMatrix.scale(0.02f, 0.02f, 0.02f);
+        modelMatrix.scale(0.03f, 0.03f, 0.03f);
         modelMatrix.bind();
         
         atual = (JWavefrontObject) it.next();
+        atual.draw();//mercurio
+        
+        Iterator itEllipse = ellipses.iterator();
+        Ellipse atualEllipse = (Ellipse) itEllipse.next();
+        modelMatrix.loadIdentity();
+        modelMatrix.rotate(30, 1, 0, 0);
+        modelMatrix.bind();
+        material.bind();
         atualEllipse.bind();
         atualEllipse.draw(GL3.GL_LINE_LOOP);
-        atual.draw();//mercurio
-        j+=0.1f;
+        
+        j+=(0.1f*mult);
+        
 
         xlua = ((float) Math.cos(j*Math.PI/15)) * 0.1f;
         ylua = ((float) Math.sin(j*Math.PI/15)) * 0.1f;
@@ -193,7 +239,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         modelMatrix.rotate(30, 1, 0, 0);
         modelMatrix.translate(x+xlua, y+ylua, 0);
         modelMatrix.rotate(30*j, 1, 1, 0);
-        modelMatrix.scale(0.025f, 0.025f, 0.025f);
+        modelMatrix.scale(0.02f, 0.02f, 0.02f);
         modelMatrix.bind();
 
         atual = (JWavefrontObject) it.next();
@@ -205,15 +251,64 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         y = ((float) Math.sin(j*Math.PI/80)) * 0.7f;
 
         modelMatrix.loadIdentity();
-        modelMatrix.rotate(60, 1, 1, 0);
+        modelMatrix.rotate(60, 1, 0, 0);
         modelMatrix.translate(x, y, 0);
         modelMatrix.rotate((15.0f)*(j+0.6f), 1, 1, 0);
         modelMatrix.scale(0.07f, 0.07f, 0.07f);
         modelMatrix.bind();
-
         atual = (JWavefrontObject) it.next();
-        //model.draw();
+        atual.draw();//venus
+
+        atualEllipse = (Ellipse) itEllipse.next();
+        modelMatrix.loadIdentity();
+        modelMatrix.rotate(60, 1, 0, 0);
+        modelMatrix.bind();
+        material.bind();
+        atualEllipse.bind();
+        atualEllipse.draw(GL3.GL_LINE_LOOP);
+        
+        x = ((float) Math.cos(j*Math.PI/80)) * 0.2f;
+        y = ((float) Math.sin(j*Math.PI/80)) * 0.3f;
+
+        modelMatrix.loadIdentity();
+        modelMatrix.rotate(10, 1, 0, 0);
+        modelMatrix.translate(x, y, 0);
+        modelMatrix.rotate((15.0f)*(j+0.6f), 1, 1, 0);
+        modelMatrix.scale(0.05f, 0.05f, 0.05f);
+        modelMatrix.bind();
+        atual = (JWavefrontObject) it.next();
+        atual.draw();//venus
+        
+        x = ((float) Math.cos(j*Math.PI/80)) * 0.7f;
+        y = ((float) Math.sin(j*Math.PI/80)) * 0.9f;
+
+        atualEllipse = (Ellipse) itEllipse.next();
+        modelMatrix.loadIdentity();
+        modelMatrix.rotate(10, 1, 0, 0);
+        modelMatrix.bind();
+        material.bind();
+        atualEllipse.bind();
+        atualEllipse.draw(GL3.GL_LINE_LOOP);
+        
+        modelMatrix.loadIdentity();
+        modelMatrix.rotate(10, 1, 0, 0);
+        modelMatrix.translate(x, y, 0);
+        modelMatrix.rotate((15.0f)*(j+0.6f), 1, 1, 0);
+        modelMatrix.scale(0.02f, 0.02f, 0.02f);
+        modelMatrix.bind();
+        atual = (JWavefrontObject) it.next();
         atual.draw();
+
+        atualEllipse = (Ellipse) itEllipse.next();
+        modelMatrix.loadIdentity();
+        modelMatrix.rotate(10, 1, 0, 0);
+        modelMatrix.bind();
+        material.bind();
+        atualEllipse.bind();
+        atualEllipse.draw(GL3.GL_LINE_LOOP);
+        
+        //model.draw();
+        
         viewMatrix.loadIdentity();
         float viewUpy = (float) (Math.cos(epslon*Math.PI/180.0f));
         if ( Math.abs(viewUpy) < 0.01){
@@ -286,6 +381,24 @@ public class Example12 extends KeyAdapter implements GLEventListener {
                 break;
             case KeyEvent.VK_S:
                 gama = gama - 1;
+                break;
+            case KeyEvent.VK_J:
+                mult = mult - 0.01f;
+                if (mult < 0){
+                    mult = 0;
+                }
+                break;
+            case KeyEvent.VK_K:
+                mult = mult + 0.01f;
+                break;
+            case KeyEvent.VK_P:
+                mult = 0;
+                break;
+            case KeyEvent.VK_C:
+                gama = 0;
+                epslon = 0;
+                alpha = 0;
+                beta = 0;
                 break;
         }
     }
