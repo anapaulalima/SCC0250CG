@@ -5,7 +5,6 @@ import br.usp.icmc.vicg.gl.core.Material;
 import br.usp.icmc.vicg.gl.jwavefront.JWavefrontObject;
 import br.usp.icmc.vicg.gl.matrix.Matrix4;
 import br.usp.icmc.vicg.gl.model.Ellipse;
-import br.usp.icmc.vicg.gl.model.Square;
 import br.usp.icmc.vicg.gl.model.WiredCube;
 import java.awt.Frame;
 import java.awt.event.WindowAdapter;
@@ -25,7 +24,6 @@ import br.usp.icmc.vicg.gl.util.ShaderFactory.ShaderType;
 
 import com.jogamp.opengl.util.AnimatorBase;
 import com.jogamp.opengl.util.FPSAnimator;
-import java.awt.Point;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -36,7 +34,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.geometry.Point3D;
-import static javax.media.opengl.GL.GL_LINES;
 
 public class Example12 extends KeyAdapter implements GLEventListener {
     
@@ -97,7 +94,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         x = y = z = xlua = ylua = 0.0f;
         mult = 1.0f;
         material = new Material();
-        nstar = 400;
+        nstar = 2000;
         starPoints = new float[nstar];
         star = new WiredCube();
     }
@@ -188,7 +185,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
             modelMatrix.loadIdentity();
             modelMatrix.scale(0.008f, 0.008f, 0.008f);
             modelMatrix.translate(starPoints[l*2],starPoints[l*2+1],0);
-            modelMatrix.rotate(30*j, 0, 0, 1);
+            modelMatrix.rotate(15*j, 0, 0, 1);
             modelMatrix.bind();
             material.bind();
             star.bind();
@@ -196,6 +193,7 @@ public class Example12 extends KeyAdapter implements GLEventListener {
         }
         
         modelMatrix.loadIdentity();
+        modelMatrix.rotate(15*j, 0, 0, 1);
         modelMatrix.scale(0.03f, 0.03f, 0.03f);
         modelMatrix.bind();
         i+=0.1f;
